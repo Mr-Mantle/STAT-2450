@@ -1,0 +1,1074 @@
+---
+title: "R Programming Basics - part 2"
+output:
+  pdf_document: null
+  html_document:
+    toc: yes
+  pdf_presentation: null
+  slidy_presentation:
+    css: slidy.css
+    widescreen: yes
+  word_document: null
+---
+
+## Outline
+
+- Flow Control
+- Functions
+- R for statistics
+
+# Flow Control
+
+## Conditional execution
+
+### *if* statement 
+
+If a logical condition holds, execute one or more statements
+
+syntax: if (condition) {executable statements}
+
+```{r eval=T}
+nclasses=2
+fulltime=FALSE
+if (nclasses >= 3){
+  fulltime=TRUE}
+fulltime
+```
+
+### *if else* pair
+
+If a condition holds, execute one set of statements, or else
+execute a second set of statements.
+
+syntax: if (condition) {
+             executable statements 1
+	     } else {
+	     executable statements 2
+	     }
+
+```{r eval=T}
+fulltime=NA
+nclasses=1
+if (nclasses >= 3) {fulltime=TRUE
+} else {fulltime=FALSE}
+fulltime
+```
+
+It is essential to begin the second line of this if/else pair as
+ "} else".  In this case the R interpreter "waits" for the "}", and
+ sees it paired with the "else".
+  The "if" statement would be completed if the "}" was 
+ included on the end of the first line.
+ 
+Often one wants to use several "else if" clauses.  The following
+example takes a numerical grade, and assigns a letter grade according
+to the Dalhousie common grade scale.
+
+```{r eval=T}
+  grade=91.5
+  Lgrade=NA
+if (grade >=90) {Lgrade="A+"
+                 print("Good job!")
+} else 
+    if (grade >= 85) {Lgrade="A"
+} else 
+    if (grade >= 80) {Lgrade="A-"
+} else 
+    if (grade >= 77) {Lgrade="B+"
+} else 
+    if (grade >= 73) {Lgrade="B"
+} else 
+    if (grade >= 70) {Lgrade="B-"
+} else 
+    if (grade >= 65) {Lgrade="C+"
+} else 
+    if (grade >= 60) {Lgrade="C"
+} else 
+    if (grade >= 55) {Lgrade="C-"
+} else 
+    if (grade >= 50) {Lgrade="D"
+    } else {Lgrade="F"; print("Too bad!")}
+Lgrade
+```
+Example: determine if a number is positive, negative or 0.
+
+```{r eval=T}
+a <- 0
+if (a < 0) {
+   print("a is a negative number")
+} else if (a > 0) {
+   print("a is a positive number")
+} else {
+   print("a is zero")
+}
+```
+
+
+
+### ifelse
+
+#### *ifelse* is a compact version of *if ... else ...*
+#### Syntax
+```{r eval = F}
+ifelse(condition, statement1, statement2)
+```
+
+There is a subtle difference in that *ifelse* works on vectors.
+
+#### Examples
+
+```{r}
+#find the minimum of scalars a and b
+a=rnorm(1); a
+b=rnorm(1); b
+minab=ifelse(a<b,a,b); print(minab)
+
+#find the component by component minimum of vectors a and b
+a=rnorm(10); 
+b=rnorm(10); 
+vecminab=ifelse(a<b,a,b); print(cbind(a,b,vecminab))
+
+#determine if the elements of a vector are evenly divisible by 2
+vec = 1:12
+evenOdd = ifelse(vec %% 2 == 0, "even", "odd")
+print(evenOdd)
+
+```
+
+## Logical Operators
+
+& (and), | (or), == (equals), ! (not)
+
+- get help on logical operators
+```{r}
+#?"=="
+```
+
+## Truth tables
+
+Suppose that $x$, $y$ are logical variables, taking values
+$T$ or $F$.  The following "truth table" gives the values of
+the functions $x\&y$ (x and y), $x|y$ (x or y), and $!x$ (not x).
+
+```{r echo=F}
+x=c(T,T,F,F)
+y=c(T,F,T,F)
+xANDy=c(T,F,F,F)
+xORy=c(T,T,T,F)
+notx=c(F,F,T,T)
+M=cbind(x,y,xANDy,xORy,notx)
+dimnames(M)[[2]]=c("x","y","x&y","x|y","!x")
+M
+```
+These basic functions can be built up into more complex expressions.
+
+Example: $(x|y)\&z$
+
+```{r echo=F}
+xory=c(T,T,F,F)
+z=c(T,F,T,F)
+l1=c(T,F,F,F)
+M=cbind(xory,z,l1)
+dimnames(M)[[2]]=c("x|y","z","(x|y)&z")
+M
+```
+
+Example:$(x\&y)|z$
+
+```{r echo=F}
+xandy=c(T,T,F,F)
+z=c(T,F,T,F)
+l2=c(T,T,T,F)
+M=cbind(xandy,z,l2)
+dimnames(M)[[2]]=c("x&y","z","(x&y)|z")
+M
+```
+
+It is often useful to include brackets in order to specify the logical expression that you want.
+For example, suppose that you are interested to know whether (one or the other of x and y are TRUE)
+and (z is TRUE).  Then you want to evaluate (x|y)&z.  Suppose that you forget to include the
+brackets, and instead evaluate x|y&z.  Are these the same?  Sometimes yes, sometimes no.
+
+```{r}
+x=c(rep(T,4),rep(F,4))
+y=rep(c(rep(T,2),rep(F,2)),2)
+z=rep(c(T,F),4)
+cbind(x,y,z,(x|y)&z,x|y&z,x|(y&z))
+```
+
+
+### Using logical values to subset data
+
+- Examples:
+
+```{r}
+vec = c(1, 3, 6, 2, 5, 10, 11, 9)
+
+#return all values which are evenly divisible by 3
+vec[vec%%3 == 0]
+
+#return all values which are not evenly divisible by 3
+vec[!vec%%3 == 0]
+vec[!((vec%%3) == 0)]  #better to use brackets if you're unsure of operator precedence
+
+# return all the values in vec which are greater than 5
+vec[vec > 5]
+
+# use "cars" data set, return all the rows where dist is less than 20
+cars[cars$dist < 20, ]
+
+# return all the rows where speed is 10
+cars[cars[,1] == 10, ]
+```
+
+###Example: is a specified year a leap year? (Uses &, |, and !)
+
+```{r}
+year = 2018
+if ( (year %% 4 == 0 & year %% 100 != 0) | year %% 400 ==0){
+    print(paste(year,"is a leap year"))
+  } else {
+    print("no")
+  }
+```
+
+Here is essentially the same thing, where the logical operations are more clearly identified.
+
+```{r}
+  year=2018
+  x=year %% 4 == 0
+  y=year  %% 100 != 0
+  z=year %% 400 ==0
+  condition=x&y|z
+  c(x,y,z,condition)
+  if(condition) print(paste(year,"is a leap year"))
+  ```
+
+
+
+
+####Example:  find records in a database
+```{r}
+rm(list=ls()) #remove all objects
+ls()
+subjectno=c(1:8)
+#enter some data for first and last name, age
+firstname=c("Dick","Jane","","Jian","jing","Li","John","Li")
+lastname=c("Tracy","Doe","Smith","Yuan","Xian","Li","Doe","")
+age=sample(c(18:35),8) #assign random ages from 18 through 35
+data=data.frame(subject=subjectno,firstname=firstname,
+      surname=lastname,age=age)
+rm("subjectno","firstname","lastname","age")
+ls()
+attach(data) #attach the dataframe data
+data
+#find subjects whose surname is "Li"
+subset1=data[surname=="Li",];subset1
+#Is there a Jane Doe in the database?
+subset2=data[surname=="Doe"&firstname=="Jane",];subset2
+#find subjects whose given or surname is missing ("")
+subset3=data[surname=="" | firstname=="",];subset3
+#Find the subjects who are older than 29 years?
+data[age>29,]
+#find all subjects whose first name starts with "J"
+#use substr(chvector,1,1) to extract the first character
+#of each element of the character vector chvector
+subset4=data[substr(firstname,1,1)=="J",];subset4
+#find all subjects whose first name starts with either "J" or "j"
+subset5=data[substr(firstname,1,1)=="J"|substr(firstname,1,1)=="j",];subset5
+detach(data) #detach the dataframe data
+```
+
+# Flow control 
+
+  *for*, *while*, *repeat*, *break* and *next*
+
+  *for*, *while* and *repeat* are iterative constructs, meaning that a collection of
+   R statements are repeated.
+  
+### *for* is the most common loop structure
+-Syntax
+```{r eval=F}
+for (var in range) {
+    statements
+}
+```
+
+
+- Examples:
+
+```{r}
+# sum the numbers 1:k
+k=12
+mysum=0  #initialize the sum to 0
+for (i in 1:k) {
+  mysum=mysum+i}
+print(mysum)
+```
+
+- Example: Find which of the years 2000 through 2020 are leap years
+```{r }
+for (i in 2000:2020){
+  if ( (i %% 4 == 0 & i %% 100 != 0) | i %% 400 ==0){
+    print(paste(i,"is a leap year"))
+  }
+}
+
+```
+
+Here is essentially the same thing, where the logical operations are more clearly
+
+```{r}
+for (i in 2000:2020){
+  x=i %% 4 == 0
+  y=i %% 100 != 0
+  z=i %% 400 ==0
+  condition=x&y|z
+  print(c(x,y,z,condition))
+    if(condition) print(paste(i,"is a leap year"))
+
+}
+```
+
+
+ *Example*: Calculate the  *inner product* of two vectors.
+Suppose that $u$ and $v$ are each numeric vectors of length $n$.
+Then the inner product of $u$ and $v$ is defined as
+
+$$\sum_{i=1}^n u_i v_i$$
+
+That is, we sum the products of the corresponding elements of the
+two vectors.  This is easy to program using a *for* loop.
+
+```{r}
+u=1:10
+v=-10:-1
+u*v
+
+prod=0
+for (i in 1:10)prod=prod+u[i]*v[i]  #note no {} needed if everying on same line
+print(prod)
+
+#verify
+sum(u*v)
+```
+
+Example: *matrix multiplication*
+Suppose that $U$ is a matrix with $m$ rows and $n$ columns, and that
+$V$ is a matrix with $n$ rows and $p$ columns.  The the matrix product
+$P=UV$ is a matrix with $m$ rows and $p$ columns, and the entry in the
+$i$'th row and $j$'th column of $P$ is
+
+$$P_{ij} = \sum_{k=1}^n U_{ik} V_{kj}$$
+
+Define some conforming matrices U and V, in this example, U being 4 by 3 and V being 3 by 3
+The product $P$ is a 4 by 3 matrix.  Find $P_{2,3}$, the element in the 2nd row and 3rd column of $P$.
+By definition 
+
+$$P_{2,3} = \sum_{k=1}^n U_{2k} V_{k3}$$
+
+```{r}
+U=matrix(1:12,byrow=T,ncol=3)
+U # a 4 by 3 matrix
+V=matrix(c(rep(1,3),c(-1,0,1),-3:-1),byrow=T,ncol=3)
+V # a 3 by 3 matrix
+U2=U[2,] #second row of U
+V3=V[,3] #third column of V
+P23=0
+for (k in 1:3) P23=P23+U2[k]*V3[k]
+P23  
+```
+
+We want to calculate $P_{i,j}$ for each pair of indices (i,j).
+Essentially
+
+```{r eval=F}
+ for (i in 1:4){
+   #for each i in (1,2,3,4), do something
+  for (j in 1:3){
+    #for each j in (1,2,3) do something
+     #calculate Pij here
+  } # end of j for loop
+    } # end of i for loop
+```
+
+This can be calculated in R using three "nested" for loops.
+
+```{r}
+#result will be a 4 by 3 matrix, having 12 elements
+P=matrix(rep(0,12),byrow=T,ncol=3) #initialize product with 0's
+for (i in 1:4){ #for each i, execute code until the closing }
+  for (j in 1:3){ #for each j, execute code until the closing }
+    for (k in 1:3){ # for each k, execute code until the closing }
+      P[i,j]=P[i,j]+U[i,k]*V[k,j]
+      }}}
+P
+
+#verify using the builtin R matrix multiplication operator "%*%".
+
+U%*%V
+
+```
+ Executing loops, in this case, "for" loops,  in R is very inefficent as compared to many computer languages, such as Java or C, and using the built in functions (in this case %*%) is always recommended.  That said, you need to know how to use loops effectively, in order to be able to do things in addition to calling the built in procedures. 
+
+
+The for loop in R is more general than the simlar construct in most
+programming languages.  The general structure is 
+
+```{r eval=F}
+for (var in set) {
+    statements
+}
+```
+ 
+
+Where "set" is an arbitrary set, and the instructions are
+evaluated for each element of the set.  
+
+```{r}
+set=c("this","that","cat","mouse","male","female")
+for (var in set) {
+   print(var)
+}
+```
+
+#### The basic definitions and a few simple examples are given below for the *while*, *repeat*, *break*, *next*
+#### statements/constructs.
+
+More meaningful examples will be given in the material on user defined functions.
+
+
+
+#### *while*
+
+#### Syntax
+```{r eval=F}
+while (condition){
+  statement
+}
+
+```
+
+#### Example
+```{r}
+x = 5
+while(x <= 20){
+  print(x)
+  x = x+5
+}
+
+```
+
+#### *repeat*
+
+#### Syntax: repeat {statement}
+#### need to use **break**
+```{r}
+x = 5
+repeat{
+  print(x)
+  x = x+5
+  if (x > 20) break
+}
+
+```
+
+#### "break" and "next"
+#### "break": break the current loop
+```{r}
+for (i in 1:6){
+  if (i==5){
+    break
+  }
+  print(i)
+}
+```
+
+#### "next": skip to next iteration
+```{r}
+for (i in 1:6){
+  if (i==5){
+    next
+  }
+  print(i)
+}
+
+```
+
+
+# User-defined functions
+-Syntax
+```{r eval=F}
+funtionname= function(arg1,arg2,...){
+  statements
+  return(something)
+}
+
+```
+
+-Examples:
+
+```{r}
+SumSquare = function(x,y){
+    val = x^2+y^2
+    return(val)
+}
+SumSquare(3,4)
+```
+
+```{r}
+SumSquares = function(x){
+# function to create the sum of squares of elements of x
+    temp=0
+    for (i in 1:length(x)){
+#    print(c(i,x[i],x[i]^2))
+    temp=temp+x[i]^2}
+    return(temp)
+}
+
+data=c(4,1,-2,5)
+SumSquares(data)
+
+```{r}
+SumSquares1 = function(x){
+# another way to do the same thing
+    temp=0
+    for (i in x){
+    print(c(i,i^2))
+    temp=temp+i^2}
+    return(temp)
+}
+
+SumSquares1(data)
+
+SumSquares2 = function(x){
+# if statement checks that the input argument x
+# is a numeric vector.  If it is not, print an
+# error message, and return a NULL value
+    if(!is.vector(x)|!is.numeric(x)){
+       print("x should be a numeric vector")
+       return(NULL)}
+# otherwise, return the sum of the squared elements of x
+    temp=0   
+    for (i in 1:length(x))temp=temp+x[i]^2
+    return(temp)
+}
+
+SumSquares2(data)
+SumSquares2(c("a","b"))
+SumSquares2(matrix(1:4,byrow=T,ncol=2))
+```
+
+
+
+# Exercise: create a function for finding leap years
+- input: startYear, endYear
+- output: return a vector of all the leap years between startYear and endYear
+- Using a for loop
+
+```{r}
+leapYears1 = function(startYear,endYear){
+  output = NULL
+#uses a for loop
+  for (year in c(startYear:endYear)){
+  if ( (year %% 4 == 0 & year %% 100 != 0) | year %% 400 ==0){
+    output = c(output,year)
+  }}
+  return(output)
+}
+
+leapYears1(2018,2028)
+```
+
+
+- Use *while* or *repeat* for looping
+
+```{r}
+leapYears2 = function(startYear,endYear){
+  results = c()
+#uses a while loop, as opposed to a for loop
+  year = startYear
+  while (year <= endYear){
+  if ( (year %% 4 == 0 & year %% 100 != 0) | year %% 400 ==0){
+    results = c(results,year)
+  }
+    year = year + 1
+  }
+  return(results)
+}
+
+leapYears2(2018,2028)
+
+```
+
+```{r}
+leapYears3 = function(years=2019){
+  #uses built in vectorized logical indexing
+  return(years[(years %% 4 == 0 & years %% 100 != 0) | years %% 400 ==0])}
+
+leapYears3(2018:2028)
+test=leapYears3(1867:2019)
+test
+```
+-Example: function calling another function
+
+Recall that the formula for the sample variance of $x_1, x_2, \ldots , x_n$ is
+
+$$s^2 =\frac{1}{n-1} \sum_{i=1}^n (x_i-\bar x)^2$$
+
+where $\bar x = \sum_{i=1}^n x_i / n$.
+
+```{r}
+mymean=function(x){
+#returns the sample mean of the values in the vector x
+  mysum=0
+  for (i in x){
+    mysum=mysum+i
+  }
+  return(mysum/length(x))
+}
+
+myvar=function(x){
+  n=length(x)
+# subtract the mean from the values in x
+  data=x-mymean(x)
+# sum the squares of the entries of data
+  myvar=SumSquares(data)
+# divide the sum of squares by n-1  
+  myvar=myvar/(n-1)
+  return(myvar)
+  }
+
+myvar(data)
+
+#check using the built in function var
+
+var(1:7)
+```
+
+-How fast is our user defined function as compared to the builtin function *var*?
+
+```{r}
+v=rnorm(50000) #vector of 50000 observations from the standard normal 
+start1=Sys.time()
+var(v) #sample variance of v using builtin function
+end1=Sys.time()
+tm1=end1-start1 
+tm1 #elapsed time
+
+start2=Sys.time()
+myvar(v) #sample variance of v using user defined function
+end2=Sys.time()
+tm2=end2-start2 
+tm2 #elapsed time
+```
+
+It is important to be able to write user defined functions in order to
+make extensions to the language.  However, the built in functions,
+which use vectorized arithmetic, with calls to more efficient languages, are typically much faster, and so the recommended choice
+with even moderate sized data sets.  
+
+
+
+
+##Scope:  the *scope* of a variable tells us which version of the variable is being used.
+Variables can be local or global.  A variable defined within a function is local to that
+function.
+
+
+TRICK to remember: Variables go in but do not go out.
+
+By this we mean that:
+
+1. variables that are defined in the main R program keep their values (if not redefined) inside functions (variables go in)
+
+2. variables only defined in a function have a scope limited to the function, and disappear (are undefined) back in the main program (variables do not go out)
+
+The following exercises are just ways to familiarize you with variable scopes. You can create your own variants.
+
+For example, test the following:
+
+- define a and b in the main program
+
+- modify a and b inside a function (not passing a or b as arguments)
+
+- print a and b in the main program
+
+- what are your conclusions?
+
+
+
+
+
+
+Example: only z exists in the global environment.  *a* and *b* are defined
+within the function *test*.  They are local to *test* and not available in
+the global environment after the function is run.
+```{r}
+rm(list=ls())  #clear everything in the global environment
+
+z=10
+ls()
+
+test=function(x){
+  a=1
+  b=2
+  y=a+b*x
+  return(y)
+  }
+
+test(z)
+ls()
+```
+
+Example 2: *a*, *b* and *z* exist in the global environment.  Only *y*, and the
+argument to the function, *x*, are available within the function.  When the function
+*test* is defined, the values of *a* and *b* available at that time are used in
+the definition.
+
+```{r}
+rm(list=ls())  #clear everything in the global environment
+
+a=1
+b=2
+z=10
+ls()
+
+test=function(x){
+  y=a+b*x
+  print(ls()) #ls lists the variables in the local environment
+              #note there is no a or b local to the function
+  print(a)    #the values printed are those from the global
+  print(b)    #environment when the function was defined
+  return(y)
+  }
+
+test(z)
+ls()
+```
+
+Example 3: *a*, *b* and *z* exists in the global environment. *a* and *b* are also
+defined within the environment which is local to the function.  The local versions
+are used within the function.
+
+```{r}
+rm(list=ls())  #clear everything in the global environment
+
+a=1
+b=2
+z=10
+ls()
+
+test=function(x){
+  a=10
+  b=20
+  y=a+b*x
+  print(ls()) #ls lists the variables in the local environment
+  return(y)
+  }
+
+output=test(z)  #now there will be a variable *output* in the global environment.
+
+ls()
+a   #these were he original, global versions of *a* and *b*
+b   #the local versions were local to the function test only
+```
+
+
+
+
+
+- A more advanced example:  suppose we have one function defined within another, and the same variable name used in each function, and globally.  Before evaluating the following code, see if you can understand what the final result *f(10)+a* will
+be, and also, any intermediate outputs.  What would the result be if you remove the line *a=3* in function g?  Which
+value of *a* will function *g* use?  In this case, the value of *a* used in function *g* is that value which was
+present in the in the environment where *g* was defined, namely *a=2*.
+
+
+```{r eval=F}
+rm(list=ls())
+a=1
+z=10
+
+f=function(x){
+  a=2
+  print(c(x,a))
+
+  g=function(x){
+  a=3
+  print(c(x,a))
+  resultg=a+x
+  print(paste("function g returns ",resultg))
+  return(resultg)}
+
+    resultf=g(x+5)+a
+    print(paste("function f returns ",resultf))
+    
+    return(resultf)
+    }
+
+f(10)+a
+```
+
+
+## Advanced topic: the argument *...*
+
+   Usually a function is called with a fixed number of arguments.  In more advanced applications, you may
+   want to pass in arguments only on some occasions, and pass them directly through to other functions within
+   the function you have written.    The  argument *...* is a placeholder for any number of named
+   argments, which can be passed through to other functions.
+
+   For example, suppose that we want a function which makes plots of both
+  *y* vs *x*, and also a histogram of *x*.  We would like to use the function with variables of any name, but
+  we would like to be able to pass in labels to the function to better identify the variables.  Let's work
+  with the *Auto* data, and make plots using  *mpg* as the y-variable ,  both vs both *displacement* and *log(displacement)*
+  as the x-variable, and let's pass the labels through to the plot and histogram functions.
+
+```{r}
+data=mydata=read.csv("http://faculty.marshall.usc.edu/gareth-james/ISL/Auto.csv")
+attach(data)
+par(mfrow=c(2,2))  #set graphics region to have two rows, two columns
+
+plot2=function(x,y,nclassin=20,...){
+ #this function first makes a plot of y vs x.  Notice that ... is passed through 
+ #from the plot2 function definition
+ plot(x,y,...)
+ #next make a histogram of x.  Notice that the default number of histogram bars is 20
+ hist(x,nclass=nclassin,...)
+  }
+
+plot2(displacement, mpg, xlab="displacement", ylab="miles per gallon")
+plot2(log(displacement), mpg, xlab="log(displacement)", ylab="miles per gallon",main="mpg vs log(displacement)",nclass=40)
+```
+
+
+
+  
+
+## Recursion - a recursive function calls itself.
+
+- Example 1: for non-negative integer $n$, "n factorial", written as $n!$ is
+defined as
+
+$$!n = n !(n-1) = n (n-1) !(n-2) = \ldots = n(n-1)(n-2) \ldots (2)(1)$$
+
+with the consistency condition $0! = 1$.
+
+The following gives R code for calculating $n!$ using both recursion, and
+a calculation using a *for* loop.
+
+```{r}
+fact0=function(x){
+   if(x==1){return(1)
+   } else   
+    {return(x*fact0(x-1))}
+} 
+fact0(6)
+#better to force the input value to be an integer
+#and to include some comment as to what the function is doing
+fact1=function(x){
+  #returns x! for x a positive integer
+  x=as.integer(x)
+   if(x<0){
+   print("Error: x must be a positive integer")
+   return(NULL)} else {
+   if(x==0|x==1){ 
+   return(1)} else {
+   return(x*fact1(x-1))}
+   }}
+
+fact1(6)
+
+#fact2 calculates factorial using a for loop
+fact2=function(x){
+#returns x! for x a positive integer
+  x=as.integer(x)
+   if(x<0){
+   print("Error: x must be a positive integer")
+   return(NULL)} else {
+   if(x==0|x==1){ 
+   return(1)} else {
+  temp=1
+  for (i in 2:x) temp=temp*i
+  return(temp)
+  }}}
+fact2(6)
+
+start=Sys.time()
+fact1(60) 
+end=Sys.time()
+end-start 
+
+start=Sys.time()
+fact2(60) 
+end=Sys.time()
+end-start
+
+start=Sys.time()
+factorial(60) 
+end=Sys.time()
+end-start
+```
+
+
+
+#Some Useful Functions for Statistics
+
+## Arithmetic
+- Arithmetic Operators
+
+
+- Mathematic Functions
+
+
+
+## Vectorized Arithmetic
+```{r}
+testVect = c(1,3,5,2,9,10,7,8,6)
+
+min(testVect) # minimum
+max(testVect) # maximum
+mean(testVect) # mean
+median(testVect) # median
+quantile(testVect) # quantile
+var(testVect) #variance
+sd(testVect) # standard deviation
+
+vect1 = cars$speed
+vect2 = cars$dist
+
+cov(vect1,vect2) # covariance
+cor(vect1,vect2) # correlation coefficient
+
+
+```
+
+###  apply, inner product, outer product
+
+
+The 'apply' function gives you a way to perform flexible operations on arrays.
+
+The syntax is:
+
+apply(X, MARGIN, FUN, ...)
+
+
+For details on the syntax of the 'apply' family of functions, please go to:
+
+https://www.datacamp.com/community/tutorials/r-tutorial-apply-family
+
+
+```{r}
+# Construct a 5x6 matrix
+X <- matrix(rnorm(30), nrow=5, ncol=6)
+
+# Sum the values of each column with `apply()`
+apply(X, 2, sum)
+```
+
+
+```{r}
+product <- outer(0:1, 0:1, "*")
+#     [,1] [,2]
+#[1,]    0    0
+#[2,]    0    1
+product2 <- outer(product,product,"*")
+product
+product2
+```
+
+
+##Probability Distributions
+
+- key words
+    - *d* : density (returns the height of the pdf)
+    - *p* : distribution function (returns the cdf)
+    - *q* : quantile function (returns the inverse cdf)
+    - *r* : random generation
+
+- distributions
+    - *binom* : Binomial Distribution
+    - *pois*  : Poisson Distribution
+    - *unif* :  Uniform Distribution
+    - *exp* : Exponential Distribution
+    - *norm* : Normal Distribution
+    - *chisq* : Chi-Squared Distribution
+    - *t*   : t Distribution
+    - *f*  : F Distribution
+
+
+
+
+What is the probability of four or less questions answered correctly by random in a twelve question multiple choice quiz?
+
+What is the threshold q that I should place on a random variable z drawn from a standard normal distribution to make sure that z is less than q with probability 0.75?
+
+How can I produce a series of independent Poisson distributed counts?
+
+Mathematical expressions of densities (pdfs):
+
+$d \sim e^{-x^2}$
+
+$d = {n \choose x} p^x (1-p)^{n-x}$
+
+https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html
+
+
+- Examples
+```{r}
+# binomial  probability of having 2 successes in 10 Benoulli draws of probability 0.2
+dbinom(2, size=10, prob=0.2)
+
+
+dbinom(0, size=10, prob=0.2) + dbinom(1, size=10, prob=0.2) + dbinom(2, size=10, prob=0.2)
+
+pbinom(2,size=10,prob=0.2)
+
+runif(6,min=1,max=2)
+
+qt(c(.025, .975), df=4)
+
+qf(.95, df1=3, df2=4)
+
+normSamples = rnorm(1000,mean=5,sd = 3)
+hist(normSamples)
+
+```
+
+- *set.seed()* reproduce the results even using random
+```{r}
+set.seed(100)
+rnorm(5)
+rnorm(5)
+
+set.seed(100) # reproduce the results
+rnorm(5)
+rnorm(5)
+```
+
+
+<!-- ## some packages (for fun) -->
+
+<!-- - *sqldf*  -->
+<!-- ```{r} -->
+<!-- library(sqldf) -->
+<!-- library(ISLR) -->
+
+<!-- sqlCars = sqldf(" select name,origin,year,cylinders,horsepower -->
+<!--                   from Auto  -->
+<!--                   where cylinders = 8 and horsepower > 200 -->
+<!--                   order by horsepower -->
+<!--                 ") -->
+
+<!-- sqlCars -->
+<!-- ``` -->
+
+<!-- - *quantmod* -->
+<!-- ```{r} -->
+<!-- library(quantmod) -->
+<!-- getSymbols("AAPL",src="yahoo",from = Sys.Date()-500) -->
+<!-- tail(AAPL) -->
+<!-- barChart(AAPL) -->
+<!-- getQuote("AAPL",src="yahoo") -->
+<!-- ``` -->
+
+
